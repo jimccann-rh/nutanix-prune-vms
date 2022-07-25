@@ -10,8 +10,15 @@
     api_url_v3: "https://{{ prism_url }}:9440/api/nutanix/v3"
     prism_url: "{{ env }}"
     api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
+    update_prism_admin_str: 'secret=dpp/data/prism/central:username'
+    update_prism_password_str: 'secret=dpp/data/prism/central:password'
 
   pre_tasks:
+    - name: Set facts
+      ansible.builtin.set_fact:
+        prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str ) }}"
+        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str ) }}"
+      no_log: true
 
     - name: Load var files
       include_vars:
