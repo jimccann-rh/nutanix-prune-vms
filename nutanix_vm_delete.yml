@@ -15,9 +15,9 @@
 
   pre_tasks:
 
-    - name: Install bottle python package hvac
-      ansible.builtin.pip:
-        name: hvac
+#    - name: Install bottle python package hvac
+#      ansible.builtin.pip:
+#        name: hvac
 
 
     - name: Set facts
