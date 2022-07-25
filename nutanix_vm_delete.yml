@@ -11,7 +11,8 @@
     prism_url: "{{ env }}"
     api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
     update_prism_admin_str: 'secret=dpp/data/prism/central:username'
-#    update_prism_password_str: 'secret=dpp/data/prism/central:password'
+    update_prism_password_str: 'secret=dpp/data/prism/central:password'
+    hv_credential_string: "auth_method=approle url={{ hvurl }} role_id={{ dpp_hcv_role_id }} secret_id={{ dpp_hcv_secret_id }}"
 
   pre_tasks:
 
