@@ -12,19 +12,13 @@
     api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
 
   pre_tasks:
-#    - name: include vars and vault for env
-#      include_vars: "{{ item }}.yml"
-#      loop:
-##        - "../config/{{ env }}"
-#        - "../secret/{{ env }}.vault"
-#      delegate_to: localhost
 
     - name: Load var files
       include_vars:
         file: "{{ item }}"
         name: "incl_vars_{{ item|basename|splitext|first }}"
       with_fileglob:
-        - ../skipvmuuid/*.yml
+        - skipvmuuid/*.yml
       delegate_to: localhost
 
   tags:
