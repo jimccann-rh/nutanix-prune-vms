@@ -25,7 +25,7 @@
         prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str ) }}"
 #        prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
 #        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
-      no_log: true
+#      no_log: true
       delegate_to: localhost
 
     - name: Load var files
