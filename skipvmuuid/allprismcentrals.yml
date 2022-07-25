@@ -1,0 +1,5 @@
+skipvmuuidlist:
+  - b2a46b75-ac5c-4d47-86c6-1979ec9dd24e # PC STS/DEV 
+  - f9a61494-6f77-4a7a-b7f2-4a8f51f074e6 # PC LTS/DEV
+  - f44ce7fa-b558-419d-a51c-1a80d8176db # PC LTS/CI
+  - a5c1a48b-7537-457c-bd34-43bef0bfe201 # PC STS/CI 

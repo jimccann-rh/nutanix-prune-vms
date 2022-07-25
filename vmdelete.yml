@@ -1,0 +1,80 @@
+---
+
+
+- name: show specific vm info (no loop)
+  debug:
+    msg:
+#      - "{{ item }}"
+#      - "{{ vm_entities[1].metadata.creation_time }}"
+      - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
+  tags:
+    - debugs
+    - never
+
+- name: Get VM creation time 
+  set_fact:
+      gettime: "{{ item.metadata.creation_time }}"
+
+- name: set total time 
+  set_fact:
+      totaltime: "{{ (ansible_date_time.iso8601[:19] | to_datetime(fmt) - gettime[:19] | to_datetime(fmt)).total_seconds() }}"
+      overtime: false
+  vars:
+    fmt: "%Y-%m-%dT%H:%M:%S"
+
+- name: set is overtime
+  set_fact:
+      overtime: true
+  when: totaltime |int > 86400
+
+- name: over 24 hrs
+  debug:
+    msg:
+      - "{{ overtime }} system is over 24 {{ totaltime }} system creation time {{ gettime }}"
+  tags:
+    - debugs
+    - never
+
+- name: to be skipped via uuid
+  debug:
+    msg:
+      - "{{ item.spec.name }} is SKIPPED"
+  when: item.metadata.uuid in skipvmuuid and overtime
+  tags:
+    - debugs
+    - never
+
+- name: to be deleted
+  debug:
+    msg:
+      - "{{ item.spec.name }} is #*#*#* DELETED *#*#*#"
+  when: item.metadata.uuid not in skipvmuuid and overtime 
+  tags:
+    - debugs
+    - never
+
+- name: Ensures VMs are deleted
+  uri:
+    url: '{{ api_url_v3 }}/vms/{{ item.metadata.uuid }}'
+    method: DELETE
+    validate_certs: false
+    status_code: 202
+    headers: 
+      Cookie: '{{ session_cookie }}'
+  delegate_to: localhost
+  when: item.metadata.uuid not in skipvmuuid and overtime and deletevms
+
+- name: set fact for system var
+  set_fact:
+    systems: "{{ systems +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+
+- name: set fact for system var to be deleted
+  set_fact:
+    systemstobedeleted: "{{ systemstobedeleted +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+  when: item.metadata.uuid not in skipvmuuid and overtime
+
+- name: set fact for system var to be skipped
+  set_fact:
+    systemstobeskipped: "{{ systemstobeskipped +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+  when: item.metadata.uuid in skipvmuuid and overtime
+
