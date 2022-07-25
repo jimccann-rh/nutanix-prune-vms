@@ -39,7 +39,6 @@
       debug:
         msg:
           - "{{ env }}"
-          - "{{ CUSTOM_USERNAME }}"
           - "{{ prism_user }}"
   
 
