@@ -39,6 +39,8 @@
       debug:
         msg:
           - "{{ env }}"
+          - "{{ CUSTOM_USERNAME }}"
+  
 
 
     - name: Auths to the cluster
