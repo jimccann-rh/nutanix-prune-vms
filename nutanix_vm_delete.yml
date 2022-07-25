@@ -14,12 +14,17 @@
 #    update_prism_password_str: 'secret=dpp/data/prism/central:password'
 
   pre_tasks:
+
+    - name: Install bottle python package hvac
+      ansible.builtin.pip:
+        name: hvac
+
+
     - name: Set facts
       ansible.builtin.set_fact:
-        prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str ) }}"
-#        prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
-#        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
-#      no_log: true
+        prism_admin: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
+        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
+      no_log: true
 
     - name: Load var files
       include_vars:
