@@ -35,6 +35,12 @@
         skipvmuuid: "{{ skipvmuuid|default() }} + {{ item.key }} = {{ item.value }}"
       with_dict: "{{ skipvmuuidlist }}"
 
+    - name: list env system
+      debug:
+        msg:
+          - "{{ env }}"
+
+
     - name: Auths to the cluster
       uri:
         url: "{{ api_url_v3 }}/clusters/list"
