@@ -49,9 +49,9 @@
     msg:
       - "{{ item.spec.name }} is #*#*#* DELETED *#*#*#"
   when: item.metadata.uuid not in skipvmuuid and overtime 
-  tags:
-    - debugs
-    - never
+#  tags:
+#    - debugs
+#    - never
 
 - name: Ensures VMs are deleted
   uri:
