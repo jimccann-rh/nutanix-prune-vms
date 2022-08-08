@@ -22,10 +22,11 @@
   vars:
     fmt: "%Y-%m-%dT%H:%M:%S"
 
-- name: set is overtime
+- name: set overtime to true 48 hrs
   set_fact:
       overtime: true
-  when: totaltime |int > 86400
+  when: totaltime |int > 172800
+#  when: totaltime |int > 86400
 
 - name: over 24 hrs
   debug:
