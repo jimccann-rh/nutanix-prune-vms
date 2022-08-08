@@ -61,7 +61,7 @@
     status_code: 202
     headers: 
       Cookie: '{{ session_cookie }}'
-  delegate_to: localhost
+#  delegate_to: localhost
   when: item.metadata.uuid not in skipvmuuid and overtime and deletevms
 
 - name: set fact for system var
