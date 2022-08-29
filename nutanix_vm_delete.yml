@@ -16,8 +16,16 @@
     hvurl: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ADDR') }}"
     dpp_hcv_role_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ROLE_ID') }}"
     dpp_hcv_secret_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_SECRET_ID') }}"
+    initalize: false
 
   pre_tasks:
+
+
+    - name: Creating hibernation trigger file
+      file:
+        path: "{{ ansible_env.HOME }}/.hibernationoff"
+        state: touch
+      when: initalize
 
     - name: Set facts
       ansible.builtin.set_fact:
