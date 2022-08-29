@@ -42,117 +42,128 @@
         - skipvmuuid/*.yml
       delegate_to: localhost
 
+    - name: Check that trigger file exits
+      stat:
+        path: "{{ ansible_env.HOME }}/.hibernationoff"
+      register: stat_result
+
   tags:
     - debugs
 
   tasks:
-    - name: merge skip vmuuid list
-      set_fact:
-        skipvmuuidlist: "{{ skipvmuuidlist|default([]) + [lookup('vars', item)] }}"
-      loop: "{{ query('varnames', '^incl_vars_(.*)$') }}"
 
-    - name: create skip vmuuid list
-      set_fact:
-        skipvmuuid: "{{ skipvmuuid|default() }} + {{ item.key }} = {{ item.value }}"
-      with_dict: "{{ skipvmuuidlist }}"
 
-    - name: list env system
-      debug:
-        msg:
-          - "{{ env }}"
-          - "{{ prism_user }}"
-  
-    - name: Auths to the cluster
-      uri:
-        url: "{{ api_url_v3 }}/clusters/list"
-        body:
-          kind: cluster
-          offset: 0
-          length: 10
-        method: POST
-        validate_certs: false
-        force_basic_auth: true
-        body_format: json
-        user: "{{ prism_user }}"
-        password: "{{ prism_password }}"
-        status_code: 200
-        return_content: true
-      register: login
-      no_log: true
+    - name: Purge VMs
+      block:
+        - name: merge skip vmuuid list
+          set_fact:
+            skipvmuuidlist: "{{ skipvmuuidlist|default([]) + [lookup('vars', item)] }}"
+          loop: "{{ query('varnames', '^incl_vars_(.*)$') }}"
+    
+        - name: create skip vmuuid list
+          set_fact:
+            skipvmuuid: "{{ skipvmuuid|default() }} + {{ item.key }} = {{ item.value }}"
+          with_dict: "{{ skipvmuuidlist }}"
+    
+        - name: list env system
+          debug:
+            msg:
+              - "{{ env }}"
+              - "{{ prism_user }}"
+      
+        - name: Auths to the cluster
+          uri:
+            url: "{{ api_url_v3 }}/clusters/list"
+            body:
+              kind: cluster
+              offset: 0
+              length: 10
+            method: POST
+            validate_certs: false
+            force_basic_auth: true
+            body_format: json
+            user: "{{ prism_user }}"
+            password: "{{ prism_password }}"
+            status_code: 200
+            return_content: true
+          register: login
+          no_log: true
+    
+        - name: Sets fact for session cookie
+          set_fact:
+            session_cookie: "{{ login.set_cookie }}"
+    
+        - name: Gets VMs list
+          uri:
+            url: "{{ api_url_v3 }}/vms/list"
+            body:
+              kind: vm
+              offset: 0
+              length: 100
+            method: POST
+            validate_certs: false
+            body_format: json
+            status_code: 200
+            headers:
+              Cookie: "{{ session_cookie }}"
+          register: vms_list
+    
+        - name: Gets VM metadata from its name
+          set_fact:
+            vm_entities: "{{ vms_list.json.entities }}"
+    
+        - name: show specific vm info
+          debug:
+            msg:
+              - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
+          loop: "{{ vm_entities }}"
+          tags:
+            - debugs
+            - never
+    
+        - name: loop vms
+          include_tasks: vmdelete.yml
+          loop: "{{ vm_entities }}"
+          loop_control:
+            label: "{{ item.spec.name }}"
+    
+        - name: list all systems
+          debug:
+            msg:
+              - "{{ systems }}"
+    
+        - name: list all systems to be DELETED
+          debug:
+            msg:
+              - "{{ systemstobedeleted }}"
+    
+        - name: list all systems to be skipped
+          debug:
+            msg:
+              - "{{ systemstobeskipped }}"
+    
+        - name: list all systems to be skipped from merged list
+          debug:
+            msg:
+              - "{{ skipvmuuid }}"
+              - "{{ skipvmuuidlist }}"
+          tags:
+            - debugs
+            - never
+    
+        - name: Execute tracepath
+          command: "tracepath www.google.com"
+          register: result
+          changed_when: result.rc != 0
+          tags:
+            - debugs
+            - never
+    
+        - name: Show result
+          debug:
+            msg: "{{ result['stdout_lines'] }}"
+          tags:
+            - debugs
+            - never
 
-    - name: Sets fact for session cookie
-      set_fact:
-        session_cookie: "{{ login.set_cookie }}"
-
-    - name: Gets VMs list
-      uri:
-        url: "{{ api_url_v3 }}/vms/list"
-        body:
-          kind: vm
-          offset: 0
-          length: 100
-        method: POST
-        validate_certs: false
-        body_format: json
-        status_code: 200
-        headers:
-          Cookie: "{{ session_cookie }}"
-      register: vms_list
-
-    - name: Gets VM metadata from its name
-      set_fact:
-        vm_entities: "{{ vms_list.json.entities }}"
-
-    - name: show specific vm info
-      debug:
-        msg:
-          - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
-      loop: "{{ vm_entities }}"
-      tags:
-        - debugs
-        - never
-
-    - name: loop vms
-      include_tasks: vmdelete.yml
-      loop: "{{ vm_entities }}"
-      loop_control:
-        label: "{{ item.spec.name }}"
-
-    - name: list all systems
-      debug:
-        msg:
-          - "{{ systems }}"
-
-    - name: list all systems to be DELETED
-      debug:
-        msg:
-          - "{{ systemstobedeleted }}"
-
-    - name: list all systems to be skipped
-      debug:
-        msg:
-          - "{{ systemstobeskipped }}"
-
-    - name: list all systems to be skipped from merged list
-      debug:
-        msg:
-          - "{{ skipvmuuid }}"
-          - "{{ skipvmuuidlist }}"
-      tags:
-        - debugs
-        - never
-
-    - name: Execute tracepath
-      command: "tracepath www.google.com"
-      register: result
-      changed_when: result.rc != 0
-      tags:
-        - debugs
-        - never
-
-    - name: Show result
-      debug:
-        msg: "{{ result['stdout_lines'] }}"
-      tags:
-        - debugs
-        - never
+      when: stat_result.stat.exists
