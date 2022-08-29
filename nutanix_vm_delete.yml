@@ -20,12 +20,11 @@
 
   pre_tasks:
 
-
     - name: Creating hibernation trigger file
       file:
         path: "{{ ansible_env.HOME }}/.hibernationoff"
         state: touch
-      when: initalize
+      when: initalize|bool
 
     - name: Set facts
       ansible.builtin.set_fact:
@@ -51,7 +50,6 @@
     - debugs
 
   tasks:
-
 
     - name: Purge VMs
       block:
