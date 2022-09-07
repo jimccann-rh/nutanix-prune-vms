@@ -5,7 +5,6 @@
       #      - "{{ vm_entities[1].metadata.creation_time }}"
       - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
   tags:
-    - ansible.builtin.debugs
     - never
 
 - name: Get VM creation time
@@ -38,7 +37,6 @@
       - "{{ item.spec.name }} is SKIPPED"
   when: item.metadata.uuid in skipvmuuid and overtime
   tags:
-    - ansible.builtin.debugs
     - never
 
 - name: To be deleted
@@ -46,9 +44,6 @@
     msg:
       - "{{ item.spec.name }} is #*#*#* DELETED *#*#*#"
   when: item.metadata.uuid not in skipvmuuid and overtime
-#  tags:
-#    - ansible.builtin.debugs
-#    - never
 
 - name: Ensures VMs are deleted
   ansible.builtin.uri:

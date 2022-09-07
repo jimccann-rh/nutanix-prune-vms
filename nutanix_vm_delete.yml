@@ -27,14 +27,14 @@
         mode: 0744
       when: initalize | bool
 
-    - name: Set facts
+    - name: Set facts from Hashi vault
       ansible.builtin.set_fact:
         prism_user: "{{ lookup('community.general.hashi_vault', update_prism_admin_str + ' ' + hv_credential_string) }}"
         prism_password: "{{ lookup('community.general.hashi_vault', update_prism_password_str + ' ' + hv_credential_string) }}"
       no_log: true
       delegate_to: localhost
 
-    - name: Load var files
+    - name: Load var files for VMs to skip
       ansible.builtin.include_vars:
         file: "{{ item }}"
         name: "incl_vars_{{ item | basename | splitext | first }}"
@@ -46,9 +46,6 @@
       ansible.builtin.stat:
         path: "{{ ansible_env.HOME }}/.hibernationoff"
       register: stat_result
-
-  tags:
-    - debugs
 
   tasks:
     - name: Purge VMs
@@ -116,7 +113,6 @@
               - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
           loop: "{{ vm_entities }}"
           tags:
-            - debugs
             - never
 
         - name: Loop vms
@@ -146,7 +142,6 @@
               - "{{ skipvmuuid }}"
               - "{{ skipvmuuidlist }}"
           tags:
-            - debugs
             - never
 
         - name: Execute tracepath
@@ -161,7 +156,6 @@
           ansible.builtin.debug:
             msg: "{{ result['stdout_lines'] }}"
           tags:
-            - debugs
             - never
 
       when: stat_result.stat.exists
