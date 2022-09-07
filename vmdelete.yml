@@ -62,10 +62,10 @@
 
 - name: Set fact for system var to be deleted
   ansible.builtin.set_fact:
-    systemstobedeleted: "{{ systemstobedeleted + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
+    system_to_delete: "{{ system_to_delete + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
   when: item.metadata.uuid not in skipvmuuid and overtime
 
 - name: Set fact for system var to be skipped
   ansible.builtin.set_fact:
-    systemstobeskipped: "{{ systemstobeskipped + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
+    system_to_skip: "{{ system_to_skip + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
   when: item.metadata.uuid in skipvmuuid and overtime
