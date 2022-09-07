@@ -1,6 +1,3 @@
----
-
-
 - name: show specific vm info (no loop)
   debug:
     msg:
