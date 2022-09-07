@@ -1,5 +1,5 @@
 ---
-- name: get info prism central
+- name: Get info prism central
   hosts: all
   gather_facts: true
   vars:
@@ -10,39 +10,40 @@
     api_url_v3: "https://{{ prism_url }}:9440/api/nutanix/v3"
     prism_url: "{{ env }}"
     api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
-    update_prism_admin_str: 'dpp/data/nutanix/prism/central:username'
-    update_prism_password_str: 'dpp/data/nutanix/prism/central:password'
+    update_prism_admin_str: "dpp/data/nutanix/prism/central:username"
+    update_prism_password_str: "dpp/data/nutanix/prism/central:password"
     hv_credential_string: "auth_method=approle url={{ hvurl }} role_id={{ dpp_hcv_role_id }} secret_id={{ dpp_hcv_secret_id }}"
     hvurl: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ADDR') }}"
     dpp_hcv_role_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_ROLE_ID') }}"
     dpp_hcv_secret_id: "{{ lookup('env', 'ANSIBLE_HASHI_VAULT_SECRET_ID') }}"
     initalize: false
+    overtime: 172800 #set time in seconds 48hrs
 
   pre_tasks:
-
     - name: Creating hibernation trigger file
-      file:
+      ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/.hibernationoff"
         state: touch
-      when: initalize|bool
+        mode: 0744
+      when: initalize | bool
 
     - name: Set facts
       ansible.builtin.set_fact:
-        prism_user: "{{ lookup('community.general.hashi_vault',  update_prism_admin_str + ' ' + hv_credential_string ) }}"
-        prism_password: "{{ lookup('community.general.hashi_vault',  update_prism_password_str + ' ' + hv_credential_string) }}"
+        prism_user: "{{ lookup('community.general.hashi_vault', update_prism_admin_str + ' ' + hv_credential_string) }}"
+        prism_password: "{{ lookup('community.general.hashi_vault', update_prism_password_str + ' ' + hv_credential_string) }}"
       no_log: true
       delegate_to: localhost
 
     - name: Load var files
-      include_vars:
+      ansible.builtin.include_vars:
         file: "{{ item }}"
-        name: "incl_vars_{{ item|basename|splitext|first }}"
+        name: "incl_vars_{{ item | basename | splitext | first }}"
       with_fileglob:
         - skipvmuuid/*.yml
       delegate_to: localhost
 
     - name: Check that trigger file exits
-      stat:
+      ansible.builtin.stat:
         path: "{{ ansible_env.HOME }}/.hibernationoff"
       register: stat_result
 
@@ -50,27 +51,26 @@
     - debugs
 
   tasks:
-
     - name: Purge VMs
       block:
-        - name: merge skip vmuuid list
-          set_fact:
-            skipvmuuidlist: "{{ skipvmuuidlist|default([]) + [lookup('vars', item)] }}"
+        - name: Merge skip vmuuid list
+          ansible.builtin.set_fact:
+            skipvmuuidlist: "{{ skipvmuuidlist | default([]) + [lookup('vars', item)] }}"
           loop: "{{ query('varnames', '^incl_vars_(.*)$') }}"
-    
-        - name: create skip vmuuid list
-          set_fact:
-            skipvmuuid: "{{ skipvmuuid|default() }} + {{ item.key }} = {{ item.value }}"
+
+        - name: Create skip vmuuid list
+          ansible.builtin.set_fact:
+            skipvmuuid: "{{ skipvmuuid | default() }} + {{ item.key }} = {{ item.value }}"
           with_dict: "{{ skipvmuuidlist }}"
-    
-        - name: list env system
-          debug:
+
+        - name: List env system
+          ansible.builtin.debug:
             msg:
               - "{{ env }}"
               - "{{ prism_user }}"
-      
+
         - name: Auths to the cluster
-          uri:
+          ansible.builtin.uri:
             url: "{{ api_url_v3 }}/clusters/list"
             body:
               kind: cluster
@@ -86,13 +86,13 @@
             return_content: true
           register: login
           no_log: true
-    
+
         - name: Sets fact for session cookie
-          set_fact:
+          ansible.builtin.set_fact:
             session_cookie: "{{ login.set_cookie }}"
-    
+
         - name: Gets VMs list
-          uri:
+          ansible.builtin.uri:
             url: "{{ api_url_v3 }}/vms/list"
             body:
               kind: vm
@@ -105,60 +105,60 @@
             headers:
               Cookie: "{{ session_cookie }}"
           register: vms_list
-    
+
         - name: Gets VM metadata from its name
-          set_fact:
+          ansible.builtin.set_fact:
             vm_entities: "{{ vms_list.json.entities }}"
-    
-        - name: show specific vm info
-          debug:
+
+        - name: Show specific vm info
+          ansible.builtin.debug:
             msg:
               - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
           loop: "{{ vm_entities }}"
           tags:
             - debugs
             - never
-    
-        - name: loop vms
-          include_tasks: vmdelete.yml
+
+        - name: Loop vms
+          ansible.builtin.include_tasks: vmdelete.yml
           loop: "{{ vm_entities }}"
           loop_control:
             label: "{{ item.spec.name }}"
-    
-        - name: list all systems
-          debug:
+
+        - name: List all systems
+          ansible.builtin.debug:
             msg:
               - "{{ systems }}"
-    
-        - name: list all systems to be DELETED
-          debug:
+
+        - name: List all systems to be DELETED
+          ansible.builtin.debug:
             msg:
               - "{{ systemstobedeleted }}"
-    
-        - name: list all systems to be skipped
-          debug:
+
+        - name: List all systems to be skipped
+          ansible.builtin.debug:
             msg:
               - "{{ systemstobeskipped }}"
-    
-        - name: list all systems to be skipped from merged list
-          debug:
+
+        - name: List all systems to be skipped from merged list
+          ansible.builtin.debug:
             msg:
               - "{{ skipvmuuid }}"
               - "{{ skipvmuuidlist }}"
           tags:
             - debugs
             - never
-    
+
         - name: Execute tracepath
-          command: "tracepath www.google.com"
+          ansible.builtin.command: "tracepath www.google.com"
           register: result
           changed_when: result.rc != 0
           tags:
             - debugs
             - never
-    
+
         - name: Show result
-          debug:
+          ansible.builtin.debug:
             msg: "{{ result['stdout_lines'] }}"
           tags:
             - debugs

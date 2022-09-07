@@ -1,78 +1,76 @@
-- name: show specific vm info (no loop)
-  debug:
+- name: Show specific vm info (no loop)
+  ansible.builtin.debug:
     msg:
-#      - "{{ item }}"
-#      - "{{ vm_entities[1].metadata.creation_time }}"
+      #      - "{{ item }}"
+      #      - "{{ vm_entities[1].metadata.creation_time }}"
       - "{{ item.metadata.creation_time }} **** {{ item.spec.name }} **** {{ item.metadata.uuid }}"
   tags:
-    - debugs
+    - ansible.builtin.debugs
     - never
 
-- name: Get VM creation time 
-  set_fact:
-      gettime: "{{ item.metadata.creation_time }}"
+- name: Get VM creation time
+  ansible.builtin.set_fact:
+    gettime: "{{ item.metadata.creation_time }}"
 
-- name: set total time 
-  set_fact:
-      totaltime: "{{ (ansible_date_time.iso8601[:19] | to_datetime(fmt) - gettime[:19] | to_datetime(fmt)).total_seconds() }}"
-      overtime: false
+- name: Set total time
+  ansible.builtin.set_fact:
+    totaltime: "{{ (ansible_date_time.iso8601[:19] | to_datetime(fmt) - gettime[:19] | to_datetime(fmt)).total_seconds() }}"
+    overtime: false
   vars:
     fmt: "%Y-%m-%dT%H:%M:%S"
 
-- name: set overtime to true 48 hrs
-  set_fact:
-      overtime: true
-  when: totaltime |int > 172800
-#  when: totaltime |int > 86400
+- name: Set overtime to true 48 hrs
+  ansible.builtin.set_fact:
+    overtime: true
+  when: totaltime | int > overtime
 
-- name: over 24 hrs
-  debug:
+- name: Over 48 hrs
+  ansible.builtin.debug:
     msg:
-      - "{{ overtime }} system is over 24 {{ totaltime }} system creation time {{ gettime }}"
+      - "{{ overtime }} system is over 48 hrs {{ totaltime }} system creation time {{ gettime }}"
   tags:
-    - debugs
+    - ansible.builtin.debugs
     - never
 
-- name: to be skipped via uuid
-  debug:
+- name: To be skipped via uuid
+  ansible.builtin.debug:
     msg:
       - "{{ item.spec.name }} is SKIPPED"
   when: item.metadata.uuid in skipvmuuid and overtime
   tags:
-    - debugs
+    - ansible.builtin.debugs
     - never
 
-- name: to be deleted
-  debug:
+- name: To be deleted
+  ansible.builtin.debug:
     msg:
       - "{{ item.spec.name }} is #*#*#* DELETED *#*#*#"
-  when: item.metadata.uuid not in skipvmuuid and overtime 
+  when: item.metadata.uuid not in skipvmuuid and overtime
 #  tags:
-#    - debugs
+#    - ansible.builtin.debugs
 #    - never
 
 - name: Ensures VMs are deleted
-  uri:
-    url: '{{ api_url_v3 }}/vms/{{ item.metadata.uuid }}'
+  ansible.builtin.uri:
+    url: "{{ api_url_v3 }}/vms/{{ item.metadata.uuid }}"
     method: DELETE
     validate_certs: false
     status_code: 202
-    headers: 
-      Cookie: '{{ session_cookie }}'
-#  delegate_to: localhost
+    headers:
+      Cookie: "{{ session_cookie }}"
+  #  delegate_to: localhost
   when: item.metadata.uuid not in skipvmuuid and overtime and deletevms
 
-- name: set fact for system var
-  set_fact:
-    systems: "{{ systems +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+- name: Set fact for system var
+  ansible.builtin.set_fact:
+    systems: "{{ systems + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
 
-- name: set fact for system var to be deleted
-  set_fact:
-    systemstobedeleted: "{{ systemstobedeleted +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+- name: Set fact for system var to be deleted
+  ansible.builtin.set_fact:
+    systemstobedeleted: "{{ systemstobedeleted + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
   when: item.metadata.uuid not in skipvmuuid and overtime
 
-- name: set fact for system var to be skipped
-  set_fact:
-    systemstobeskipped: "{{ systemstobeskipped +  ['*System name* ' + item.spec.name + ' *System UUID* ' + item.metadata.uuid + ' *System Creation Time* ' + item.metadata.creation_time] | list }}"
+- name: Set fact for system var to be skipped
+  ansible.builtin.set_fact:
+    systemstobeskipped: "{{ systemstobeskipped + ['*System name* ' +item.spec.name +' *System UUID* ' +item.metadata.uuid +' *System Creation Time* ' +item.metadata.creation_time] | list }}"
   when: item.metadata.uuid in skipvmuuid and overtime
-
