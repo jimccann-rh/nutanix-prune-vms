@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: true
   vars:
-    deletevms: false
+    delete_vms: false
     systems: []
     system_to_delete: []
     system_to_skip: []

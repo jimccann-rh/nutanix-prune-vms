@@ -54,7 +54,7 @@
     headers:
       Cookie: "{{ session_cookie }}"
   #  delegate_to: localhost
-  when: item.metadata.uuid not in skipvmuuid and overtime and deletevms
+  when: item.metadata.uuid not in skipvmuuid and overtime and delete_vms
 
 - name: Set fact for system var
   ansible.builtin.set_fact:
