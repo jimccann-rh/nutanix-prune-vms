@@ -8,5 +8,5 @@ api_url_v1: "https://{{ prism_url }}:9440/PrismGateway/services/rest/v1"
 update_prism_admin_str: "dpp/data/nutanix/prism/central:username"
 update_prism_password_str: "dpp/data/nutanix/prism/central:password"
 initalize: false
-overtimetotal: 172800 #set time in seconds 48hrs
+overtimemax: 172800 #set time in seconds 48hrs
 
