@@ -21,7 +21,7 @@
 - name: Set overtime to true 48 hrs
   ansible.builtin.set_fact:
     overtime: true
-  when: totaltime | int > 172800
+  when: totaltime | int > overtimetotal 
 #  when: totaltime | int > overtime
 
 - name: Over 48 hrs

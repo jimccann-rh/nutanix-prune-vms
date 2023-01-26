@@ -2,7 +2,7 @@
 
 Prune expired VMs from Nutanix clusters
 
-This uses Prism Central API to remove VMs after a certain time. This is currently set at 48hrs. To change time adjust varible called `overtime`.
+This uses Prism Central API to remove VMs after a certain time. This is currently set at 48hrs. To change time adjust varible called `overtimetotal`.
 
 **For this code to be tested. You will need to run this on the bastion host of the Nutanix cluster.**
 
