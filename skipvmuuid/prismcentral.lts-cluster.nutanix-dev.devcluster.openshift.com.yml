@@ -4,3 +4,4 @@ skipvmuuidlist:
   - 6409d092-e60f-43cf-9584-2a43185768d9 # Reserver-QE-Servers LTS/DEV
   - 2425a5bd-83b0-47b4-a893-cb98933f3e4d # object store os-332332-default-0 LTS/DEV
   - c26b46d1-c4cf-4f1f-92c4-1d0b5eacfbb4 # object store os-332332-opfsteksrh-envoy-0 LTS/DEV
+  - 19a5599c-e0bd-470b-8e1d-cd3996d343d1 # LDAP for LTS/DEV
